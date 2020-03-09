@@ -24,20 +24,27 @@ class App extends React.Component {
         invTotals: invTotals
     };
     this.setStateHandler = this.setStateHandler.bind(this);
+    this.doCalc = this.doCalc.bind(this);
+    this.checkState = this.checkState.bind(this);
   }
-
+  
   setStateHandler(e) {
     this.setState({[e.target.name]: e.target.value})
-
+  }
+  
+  doCalc() {
     let newInvTots = [];
     for(let i=18; i<81; i++){
-      let yearTot = 0;
-      if(i===this.state.startingAge){yearTot =+ this.state.startingInv}
+      let yearTot = 1;
+      if(i==this.state.startingAge){
+        yearTot =+ this.state.startingInv
+      }
       newInvTots[i-18] = {age: i, inv: yearTot}
     }
+    console.log(newInvTots);
     this.setState({invTotals: newInvTots})
-    console.log(this.state);
   }
+  
 
   render() { 
     const data = [
@@ -77,6 +84,7 @@ class App extends React.Component {
       <input type="number" value={this.state.invEndAge} onChange = {this.setStateHandler} name = "invEndAge" />
       <label for="oneTimeInvAge">One Time Investment Age: </label>
       <input type="number" value={this.state.oneTimeInvAge} onChange = {this.setStateHandler} name = "oneTimeInvAge" />
+      <button onClick={this.doCalc}>Do the thing</button>
       <h1>Calc</h1>
       <p>Starting Age: {this.state.startingAge}</p>
       <p>Inv Start Age: {this.state.invStartAge}</p>
