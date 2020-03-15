@@ -1,8 +1,10 @@
 import React from 'react';
 import './App.css';
 import '../node_modules/react-vis/dist/style.css';
-import {XYPlot, VerticalGridLines, HorizontalGridLines, XAxis, YAxis, Crosshair, LineSeries} from 'react-vis';
-  
+import {XYPlot, XAxis, YAxis, LineSeries} from 'react-vis';
+import InputRange from 'react-input-range'
+import "react-input-range/lib/css/index.css";
+
 class App extends React.Component {
   constructor() {
     super();
@@ -23,7 +25,8 @@ class App extends React.Component {
         oneTimeInv: 0,
         invGrowth: 7, 
         withRate: 4,
-        invTotals: invTotals
+        invTotals: invTotals,
+        value: {min: 2, max: 10}
     };
     this.setStateHandler = this.setStateHandler.bind(this);
     this.doCalc = this.doCalc.bind(this);
@@ -77,19 +80,12 @@ class App extends React.Component {
 
    render() { 
     
-    const myValues = [
-      {x:5},
-      {x:5}
-    ]
-
     return (
     <div className="App">
       <div className="Inputs">
-        <h1>{this.state.invGrowth}</h1>
         <h3>Enter your retirement plan:</h3>
-        <label>Starting Age: 
-          <input type="number" min={18} max={80} value={this.state.startingAge} onChange = {this.setStateHandler} name = "startingAge" />        
-        </label>
+        <p>Starting Age:</p> 
+        <InputRange maxValue={80} minValue={18} value={this.state.startingAge}  onChange= {startingAge => this.setState({ startingAge })} />
         <label>Starting Investment Value:
           <input type="number" value={this.state.startingInv} onChange = {this.setStateHandler} name = "startingInv" />        
         </label>
