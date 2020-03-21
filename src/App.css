@@ -1,12 +1,12 @@
-.App {
-  text-align: center;
-  display: flex;
-  justify-content: center;
-}
+
 
 label {
   font-weight: 600;
   font-size: .9rem;
   display: block; 
   margin: 0.5rem 0;
+}
+
+.GridPad {
+  padding: 20px;
 }

@@ -1,9 +1,8 @@
 import React from 'react';
 import './App.css';
 import '../node_modules/react-vis/dist/style.css';
-import {XYPlot, XAxis, YAxis, LineSeries} from 'react-vis';
-import InputRange from 'react-input-range'
-import "react-input-range/lib/css/index.css";
+import {XYPlot, FlexibleWidthXYPlot , XAxis, YAxis, LineSeries} from 'react-vis';
+import {Container, Paper, Grid, Slider } from '@material-ui/core';
 
 class App extends React.Component {
   constructor() {
@@ -15,12 +14,12 @@ class App extends React.Component {
       withdrawTotals[i-18] = {x: i, y: 0}
     }
     this.state = {
-        startingAge: 20, 
+        startingAge: 18, 
         invStartAge: 25, 
         invEndAge: 55,
         oneTimeInvAge: 30, 
         withdrawAge: 55,
-        startingInv: 10000,
+        startingInv: 0,
         annualInv: 0, 
         oneTimeInv: 0,
         invGrowth: 7, 
@@ -33,9 +32,14 @@ class App extends React.Component {
     this.printTots = this.printTots.bind(this);
   }
   
-  setStateHandler(e) {
-    this.setState({[e.target.name]: e.target.value})
+  setStateHandler(e, newValue) {
+    if(!newValue){
+      this.setState({[e.target.name]: e.target.value})
+    } else {
+      this.setState({[e.target.offsetParent.id]: newValue})
+    }
     this.doCalc()
+    console.log(this.state);
   }
   
   doCalc() {
@@ -81,77 +85,105 @@ class App extends React.Component {
    render() { 
     
     return (
-    <div className="App">
-      <Inputs startingAge={this.state.startingAge}
-              invStartAge={this.state.invStartAge}
-              invEndAge={this.state.invEndAge}
-              oneTimeInvAge={this.state.oneTimeInvAge}
-              withdrawAge={this.state.withdrawAge}
-              startingInv={this.state.startingInv}
-              annualInv={this.state.annualInv}
-              oneTimeInv={this.state.oneTimeInv}
-              invGrowth={this.state.invGrowth}
-              withRate={this.state.withRate}
-              setStateHandler={this.setStateHandler} />
-      <div className="Charts">
-        <XYPlot margin={{left: 100}} height={300} width={600}>
-          <XAxis />
-          <YAxis />
-          <LineSeries data={this.state.invTotals} />
-        </XYPlot>
-        <XYPlot margin={{left: 100}} height={300} width={600}>
-          <XAxis />
-          <YAxis />
-          <LineSeries data={this.state.withdrawTotals} />
-        </XYPlot>
+    <Container maxWidth="lg">
+      <Grid container spacing={2}>
+        <Grid item xs={6}>
+          <Inputs startingAge={this.state.startingAge}
+                invStartAge={this.state.invStartAge}
+                invEndAge={this.state.invEndAge}
+                oneTimeInvAge={this.state.oneTimeInvAge}
+                withdrawAge={this.state.withdrawAge}
+                startingInv={this.state.startingInv}
+                annualInv={this.state.annualInv}
+                oneTimeInv={this.state.oneTimeInv}
+                invGrowth={this.state.invGrowth}
+                withRate={this.state.withRate}
+                setStateHandler={this.setStateHandler} />
+        </Grid>
+        <Grid item xs={6}>
+          <Paper>
+            <FlexibleWidthXYPlot  margin={{left: 100}} height={300}>
+              <XAxis />
+              <YAxis />
+              <LineSeries data={this.state.invTotals} />
+            </FlexibleWidthXYPlot >
+          </Paper>
+          <Paper>
+            <FlexibleWidthXYPlot  margin={{left: 100}} height={300}>
+              <XAxis />
+              <YAxis />
+              <LineSeries data={this.state.withdrawTotals} />
+            </FlexibleWidthXYPlot >
+          </Paper>
+        </Grid>
+      </Grid>
+    </Container>
 
-      </div>
-    </div>
     );
   }
 }
 
 class Inputs extends React.Component {
+
   render() {
     return( 
-      <div className="Inputs">
-      <h3>Enter your retirement plan:</h3>
-      <p>Starting Age:</p> 
-      <InputRange maxValue={80} minValue={18} value={this.props.startingAge}  onChange= {startingAge => this.setState({ startingAge })} />
-      <label>Starting Investment Value:
-        <input type="number" value={this.props.startingInv} onChange = {this.props.setStateHandler} name = "startingInv" />        
-      </label>
-      <hr />
-      <label>Annual Investment Start Age:
-        <input type="number" min={18} max={80} value={this.props.invStartAge} onChange = {this.props.setStateHandler} name = "invStartAge" />
-      </label>
-      <label>Annual Investment End Age:
-        <input type="number" min={18} max={80} value={this.props.invEndAge} onChange = {this.props.setStateHandler} name = "invEndAge" />
-      </label>
-      <label>Annual Investment Value:
-        <input type="number" value={this.props.annualInv} onChange = {this.props.setStateHandler} name = "annualInv" />
-      </label>
-      <hr />
-      <label>One Time Investment Age:
-        <input type="number" min={18} max={80} value={this.props.oneTimeInvAge} onChange = {this.props.setStateHandler} name = "oneTimeInvAge" />
-      </label>
-      <label>One Time Investment Value: 
-        <input type="number" value={this.props.oneTimeInv} onChange = {this.props.setStateHandler } name = "oneTimeInv" />
-      </label>
-      <hr />
-      <label>Annual Return:
-        <input type="number" value={this.props.invGrowth} onChange = {this.props.setStateHandler} name = "invGrowth" />
-      </label>
-      <label>Withdrawal Age:
-        <input type="number" min={18} max={80} value={this.props.withdrawAge} onChange = {this.props.setStateHandler } name = "withdrawAge" />
-      </label>
-      <label>Withdrawal Percentage:
-        <input type="number" value={this.props.withRate} onChange = {this.props.setStateHandler } name = "withRate" />
-      </label> 
-      <hr />
-      <button onClick={this.doCalc}>Do the thing</button>
-      <button onClick={this.printTots}>Print the Tots!</button>
-    </div>
+      <Grid container spacing={1}>
+        <Grid item xs={12}>
+          <Paper>
+            <h3>Enter your retirement plan:</h3>
+          </Paper>
+        </Grid>
+        <Grid item xs={12}>
+          <Paper>
+            <Grid container>
+              <Grid className="GridPad" item xs={6}>
+                <div className="labels">Starting Age: {this.props.startingAge}</div>
+              </Grid>
+              <Grid className="GridPad" item xs={6}>
+                <Slider id="startingAge"  min={18} max={80} defaultValue={18} valueLabelDisplay="auto" onChangeCommitted={this.props.setStateHandler} />
+              </Grid>
+            </Grid>
+            <Grid container>
+              <Grid className="GridPad" item xs={6}>
+                <div className="labels">Starting Investment Value: {this.props.startingInv}</div>
+              </Grid>
+              <Grid className="GridPad" item xs={6}>
+                <Slider id="startingInv" min={0} max={500000} defaultValue={0} step={5000} valueLabelDisplay="auto" onChangeCommitted={this.props.setStateHandler} />
+              </Grid>
+            </Grid>
+          </Paper>
+        </Grid>
+          <hr />
+          <label>Annual Investment Start Age:
+            <input type="number" min={18} max={80} value={this.props.invStartAge} onChange = {this.props.setStateHandler} name = "invStartAge" />
+          </label>
+          <label>Annual Investment End Age:
+            <input type="number" min={18} max={80} value={this.props.invEndAge} onChange = {this.props.setStateHandler} name = "invEndAge" />
+          </label>
+          <label>Annual Investment Value:
+            <input type="number" value={this.props.annualInv} onChange = {this.props.setStateHandler} name = "annualInv" />
+          </label>
+          <hr />
+          <label>One Time Investment Age:
+            <input type="number" min={18} max={80} value={this.props.oneTimeInvAge} onChange = {this.props.setStateHandler} name = "oneTimeInvAge" />
+          </label>
+          <label>One Time Investment Value: 
+            <input type="number" value={this.props.oneTimeInv} onChange = {this.props.setStateHandler } name = "oneTimeInv" />
+          </label>
+          <hr />
+          <label>Annual Return:
+            <input type="number" value={this.props.invGrowth} onChange = {this.props.setStateHandler} name = "invGrowth" />
+          </label>
+          <label>Withdrawal Age:
+            <input type="number" min={18} max={80} value={this.props.withdrawAge} onChange = {this.props.setStateHandler } name = "withdrawAge" />
+          </label>
+          <label>Withdrawal Percentage:
+            <input type="number" value={this.props.withRate} onChange = {this.props.setStateHandler } name = "withRate" />
+          </label> 
+          <hr />
+          <button onClick={this.doCalc}>Do the thing</button>
+          <button onClick={this.printTots}>Print the Tots!</button>
+      </Grid>
     )
   }
 }
