@@ -1,8 +1,9 @@
 import React from 'react';
 import './App.css';
 import '../node_modules/react-vis/dist/style.css';
-import {XYPlot, FlexibleWidthXYPlot , XAxis, YAxis, LineSeries} from 'react-vis';
-import {Container, Paper, Grid, Slider } from '@material-ui/core';
+import {FlexibleWidthXYPlot , XAxis, YAxis, LineSeries} from 'react-vis';
+import {Container, Paper, Grid, Slider, Tooltip, IconButton} from '@material-ui/core';
+import InfoTwoToneIcon from '@material-ui/icons/InfoTwoTone';
 
 class App extends React.Component {
   constructor() {
@@ -19,22 +20,35 @@ class App extends React.Component {
         invEndAge: 55,
         oneTimeInvAge: 30, 
         withdrawAge: 55,
-        startingInv: 0,
+        startingInv: 5000,
         annualInv: 0, 
         oneTimeInv: 0,
         invGrowth: 7, 
         withRate: 4,  
         invTotals: invTotals,
-        value: {min: 2, max: 10}
+        value: {min: 2, max: 10},
+        showGraphs: 1
     };
     this.setStateHandler = this.setStateHandler.bind(this);
     this.doCalc = this.doCalc.bind(this);
     this.printTots = this.printTots.bind(this);
   }
+
+  componentDidMount() {
+    this.doCalc();
+  }
   
   setStateHandler(e, newValue) {
-    if(!newValue){
-      this.setState({[e.target.name]: e.target.value})
+    console.log(e.target);
+    console.log(newValue);
+    if (e.target.offsetParent.id === "invRange"){
+      this.setState({["invStartAge"]: newValue[0]})
+      this.setState({["invEndAge"]: newValue[1]})
+    } else if(e.target.offsetParent.id === "startEndAge"){
+      this.setState({["startingAge"]: newValue[0]})
+      this.setState({["withdrawAge"]: newValue[1]})
+    } else if (["startingInv", "oneTimeInv", "annualInv"].includes(e.target.id)){
+      this.setState({[e.currentTarget.id]: e.currentTarget.value})
     } else {
       this.setState({[e.target.offsetParent.id]: newValue})
     }
@@ -86,8 +100,14 @@ class App extends React.Component {
     
     return (
     <Container maxWidth="lg">
-      <Grid container spacing={2}>
-        <Grid item xs={6}>
+      <Grid container spacing={1}>
+        <Grid className="Banner" item xs={12}>
+          <Paper className="GridPad">
+           <h3>Retirement Calculator</h3>
+           <p>Use the sliders to reflect the details of your retirement plan.</p>
+          </Paper>
+        </Grid>
+        <Grid item xs={5}>
           <Inputs startingAge={this.state.startingAge}
                 invStartAge={this.state.invStartAge}
                 invEndAge={this.state.invEndAge}
@@ -100,21 +120,19 @@ class App extends React.Component {
                 withRate={this.state.withRate}
                 setStateHandler={this.setStateHandler} />
         </Grid>
-        <Grid item xs={6}>
-          <Paper>
-            <FlexibleWidthXYPlot  margin={{left: 100}} height={300}>
-              <XAxis />
-              <YAxis />
-              <LineSeries data={this.state.invTotals} />
-            </FlexibleWidthXYPlot >
-          </Paper>
-          <Paper>
-            <FlexibleWidthXYPlot  margin={{left: 100}} height={300}>
-              <XAxis />
-              <YAxis />
-              <LineSeries data={this.state.withdrawTotals} />
-            </FlexibleWidthXYPlot >
-          </Paper>
+        <Grid item xs={7}>
+            <Paper>
+                <FlexibleWidthXYPlot  margin={{left: 100}} height={300}>
+                  <XAxis />
+                  <YAxis />
+                  <LineSeries data={this.state.invTotals} />
+                </FlexibleWidthXYPlot >
+                <FlexibleWidthXYPlot  margin={{left: 100}} height={300}>
+                  <XAxis />
+                  <YAxis />
+                  <LineSeries data={this.state.withdrawTotals} />
+                </FlexibleWidthXYPlot >
+            </Paper>
         </Grid>
       </Grid>
     </Container>
@@ -123,54 +141,82 @@ class App extends React.Component {
   }
 }
 
-class Inputs extends React.Component {
 
+class Inputs extends React.Component {
   render() {
     return( 
       <Grid container spacing={1}>
         <Grid item xs={12}>
           <Paper>
-            <h3>Enter your retirement plan:</h3>
+            <Grid container alignItems="center">
+              <Grid className="GridPad" item xs={12}>
+                  I am&nbsp;<span className="intextVar">{this.props.startingAge}</span>
+                  &nbsp;years old and plan to retire at&nbsp;<span className="intextVar">{this.props.withdrawAge}</span>. 
+                <Grid className="GridPad" item xs={10}>
+                  <Slider id="startEndAge" defaultValue = {[18,55]}  min={18} max={80} valueLabelDisplay="auto" onChangeCommitted={this.props.setStateHandler} />
+                </Grid>
+              </Grid>
+            </Grid>
+
+            <Grid container alignItems="center">
+              <Grid className="GridPad" item xs={12}>
+                  I have&nbsp;<span className="intextVar">${this.props.startingInv}</span>
+                  &nbsp;saved for retirement. 
+                <Grid className="GridPad" item xs={10} >
+                  <Slider id="startingInv" min={0} max={500000} step={1000} defaultValue={5} valueLabelDisplay="auto" onChangeCommitted={this.props.setStateHandler} />
+                </Grid>
+              </Grid>
+            </Grid>
+            <Grid container alignItems="center">
+              <Grid className="GridPad" item xs={12}>
+                  I plan to invest starting at age&nbsp;<span className="intextVar">{this.props.invStartAge}</span>
+                  &nbsp; and ending at age&nbsp;<span className="intextVar">{this.props.invEndAge}</span>.
+                <Grid className="GridPad" item xs={10} >
+                  <Slider id="invRange" defaultValue = {[25, 55]} min={18} max={80} valueLabelDisplay="auto" onChangeCommitted={this.props.setStateHandler} />
+                </Grid>
+              </Grid>
+            </Grid>
+
+            <Grid container alignItems="center">
+              <Grid className="GridPad" item xs={12}>
+                  I plan to invest &nbsp;<span className="intextVar">${this.props.annualInv}</span>
+                  &nbsp; annually.
+                <Grid className="GridPad" item xs={10} >
+                  <Slider id="annualInv" min={0} max={100000} step={1000} defaultValue={0}  valueLabelDisplay="auto" onChangeCommitted={this.props.setStateHandler} />
+                </Grid>
+              </Grid>
+            </Grid>
+
           </Paper>
         </Grid>
+
         <Grid item xs={12}>
           <Paper>
             <Grid container>
               <Grid className="GridPad" item xs={6}>
-                <div className="labels">Starting Age: {this.props.startingAge}</div>
+                Age of One Time Investment or Expenditure:&nbsp;<span className="intextVar">{this.props.oneTimeInvAge}</span>
+               <Tooltip placement="right" title="In this section, use a positive value to see the impact of a one-time investment such as an employment bonus.  Use a negative value to see how retirement considerations are affected by an expenditure such as using retirement funds for a down payment.">
+                 <IconButton aria-label="text2">
+                   <InfoTwoToneIcon />
+                 </IconButton>
+               </Tooltip>
+
               </Grid>
               <Grid className="GridPad" item xs={6}>
-                <Slider id="startingAge"  min={18} max={80} defaultValue={18} valueLabelDisplay="auto" onChangeCommitted={this.props.setStateHandler} />
+                <Slider id="oneTimeInvAge"  min={18} max={80} defaultValue={30} valueLabelDisplay="auto" onChangeCommitted={this.props.setStateHandler} />
               </Grid>
             </Grid>
             <Grid container>
               <Grid className="GridPad" item xs={6}>
-                <div className="labels">Starting Investment Value: {this.props.startingInv}</div>
+                Value:&nbsp;<span className="intextVar">${this.props.oneTimeInv}</span>
               </Grid>
               <Grid className="GridPad" item xs={6}>
-                <Slider id="startingInv" min={0} max={500000} defaultValue={0} step={5000} valueLabelDisplay="auto" onChangeCommitted={this.props.setStateHandler} />
+                <Slider id="oneTimeInv" min={-100000} max={100000} step={5000} defaultValue={0}  valueLabelDisplay="auto" onChangeCommitted={this.props.setStateHandler} />
               </Grid>
             </Grid>
           </Paper>
         </Grid>
-          <hr />
-          <label>Annual Investment Start Age:
-            <input type="number" min={18} max={80} value={this.props.invStartAge} onChange = {this.props.setStateHandler} name = "invStartAge" />
-          </label>
-          <label>Annual Investment End Age:
-            <input type="number" min={18} max={80} value={this.props.invEndAge} onChange = {this.props.setStateHandler} name = "invEndAge" />
-          </label>
-          <label>Annual Investment Value:
-            <input type="number" value={this.props.annualInv} onChange = {this.props.setStateHandler} name = "annualInv" />
-          </label>
-          <hr />
-          <label>One Time Investment Age:
-            <input type="number" min={18} max={80} value={this.props.oneTimeInvAge} onChange = {this.props.setStateHandler} name = "oneTimeInvAge" />
-          </label>
-          <label>One Time Investment Value: 
-            <input type="number" value={this.props.oneTimeInv} onChange = {this.props.setStateHandler } name = "oneTimeInv" />
-          </label>
-          <hr />
+
           <label>Annual Return:
             <input type="number" value={this.props.invGrowth} onChange = {this.props.setStateHandler} name = "invGrowth" />
           </label>
