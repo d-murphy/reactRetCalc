@@ -2,7 +2,7 @@ import React from 'react';
 import './App.css';
 import '../node_modules/react-vis/dist/style.css';
 import {FlexibleWidthXYPlot , XAxis, YAxis, LineSeries} from 'react-vis';
-import {Container, Paper, Grid, Slider, Tooltip, IconButton} from '@material-ui/core';
+import {Container, Paper, Grid, Slider, Tooltip, IconButton, Switch} from '@material-ui/core';
 import InfoTwoToneIcon from '@material-ui/icons/InfoTwoTone';
 
 class App extends React.Component {
@@ -27,7 +27,9 @@ class App extends React.Component {
         withRate: 4,  
         invTotals: invTotals,
         value: {min: 2, max: 10},
-        showGraphs: 1
+        showGraphs: 1,
+        fixYAxis: true,
+        scenarios: []
     };
     this.setStateHandler = this.setStateHandler.bind(this);
     this.doCalc = this.doCalc.bind(this);
@@ -39,16 +41,14 @@ class App extends React.Component {
   }
   
   setStateHandler(e, newValue) {
-    console.log(e.target);
-    console.log(newValue);
     if (e.target.offsetParent.id === "invRange"){
       this.setState({["invStartAge"]: newValue[0]})
       this.setState({["invEndAge"]: newValue[1]})
     } else if(e.target.offsetParent.id === "startEndAge"){
       this.setState({["startingAge"]: newValue[0]})
       this.setState({["withdrawAge"]: newValue[1]})
-    } else if (["startingInv", "oneTimeInv", "annualInv"].includes(e.target.id)){
-      this.setState({[e.currentTarget.id]: e.currentTarget.value})
+    } else if(e.target.name==="fixYAxis") {
+      this.setState({[e.target.name]: e.target.checked})
     } else {
       this.setState({[e.target.offsetParent.id]: newValue})
     }
@@ -96,15 +96,23 @@ class App extends React.Component {
     console.log( this.state.invTotals );
     }
 
+
    render() { 
     
     return (
-    <Container maxWidth="lg">
-      <Grid container spacing={1}>
+    <Container className="addTopSpace" maxWidth="lg">
+      <Grid container spacing={1} direction="row" alignItems="flex-start" >
         <Grid className="Banner" item xs={12}>
           <Paper className="GridPad">
-           <h3>Retirement Calculator</h3>
-           <p>Use the sliders to reflect the details of your retirement plan.</p>
+            <Grid container justify="space-between" alignItems="flex-end">
+              <Grid item>
+                <h3>Retirement Calculator</h3>
+                <p>Use the sliders to reflect the details of your retirement plan.</p>
+              </Grid>
+              <Grid item>
+                Fix Y Axis: <Switch  checked={this.state.fixYAxis} onChange={this.setStateHandler} name="fixYAxis" color="primary" />
+              </Grid>
+            </Grid>
           </Paper>
         </Grid>
         <Grid item xs={5}>
@@ -121,18 +129,22 @@ class App extends React.Component {
                 setStateHandler={this.setStateHandler} />
         </Grid>
         <Grid item xs={7}>
-            <Paper>
-                <FlexibleWidthXYPlot  margin={{left: 100}} height={300}>
-                  <XAxis />
-                  <YAxis />
-                  <LineSeries data={this.state.invTotals} />
-                </FlexibleWidthXYPlot >
-                <FlexibleWidthXYPlot  margin={{left: 100}} height={300}>
-                  <XAxis />
-                  <YAxis />
-                  <LineSeries data={this.state.withdrawTotals} />
-                </FlexibleWidthXYPlot >
-            </Paper>
+          <Paper className="removePaperMargin">
+            <center><h4>Investment Balance</h4></center>
+            <FlexibleWidthXYPlot  margin={{left: 80}} height={300}  yDomain ={[0,5000000]} >
+              <XAxis />
+              <YAxis />
+              <LineSeries data={this.state.invTotals} />
+            </FlexibleWidthXYPlot >
+          </Paper>
+          <Paper className="removePaperMargin2">
+            <center><h4>Annual Withdrawals</h4></center>
+            <FlexibleWidthXYPlot  margin={{left: 80}} height={300} yDomain={[0,200000]}>
+              <XAxis />
+              <YAxis />
+              <LineSeries data={this.state.withdrawTotals} />
+            </FlexibleWidthXYPlot >
+          </Paper>
         </Grid>
       </Grid>
     </Container>
@@ -140,6 +152,8 @@ class App extends React.Component {
     );
   }
 }
+
+
 
 
 class Inputs extends React.Component {
@@ -216,19 +230,26 @@ class Inputs extends React.Component {
             </Grid>
           </Paper>
         </Grid>
-
-          <label>Annual Return:
-            <input type="number" value={this.props.invGrowth} onChange = {this.props.setStateHandler} name = "invGrowth" />
-          </label>
-          <label>Withdrawal Age:
-            <input type="number" min={18} max={80} value={this.props.withdrawAge} onChange = {this.props.setStateHandler } name = "withdrawAge" />
-          </label>
-          <label>Withdrawal Percentage:
-            <input type="number" value={this.props.withRate} onChange = {this.props.setStateHandler } name = "withRate" />
-          </label> 
-          <hr />
-          <button onClick={this.doCalc}>Do the thing</button>
-          <button onClick={this.printTots}>Print the Tots!</button>
+        <Grid item xs={12}>
+          <Paper>
+            <Grid container>
+              <Grid className="GridPad" item xs={6}>
+                Annual Return:&nbsp;<span className="intextVar">{this.props.invGrowth}%</span>
+              </Grid>
+              <Grid className="GridPad" item xs={6}>
+                <Slider id="invGrowth"  min={0} max={10} defaultValue={7} valueLabelDisplay="auto" onChangeCommitted={this.props.setStateHandler} />
+              </Grid>
+            </Grid>
+            <Grid container>
+              <Grid className="GridPad" item xs={6}>
+                Withdrawal Rate:&nbsp;<span className="intextVar">{this.props.withRate}%</span>
+              </Grid>
+              <Grid className="GridPad" item xs={6}>
+                <Slider id="withRate"  min={0} max={10} defaultValue={4} valueLabelDisplay="auto" onChangeCommitted={this.props.setStateHandler} />
+              </Grid>
+            </Grid>
+          </Paper>
+        </Grid>
       </Grid>
     )
   }

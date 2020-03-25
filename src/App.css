@@ -7,8 +7,21 @@
   padding-right: 20px;
 }
 
+.removePaperMargin {
+  margin-top: -20px;
+}
+
+.removePaperMargin2 {
+  margin-top: -10px;
+}
+
+
 .Banner {
   margin-top: 25px;
+}
+
+.addTopSpace {
+  margin-top: 10px;
 }
 
 
