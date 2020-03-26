@@ -24,7 +24,6 @@
   margin-top: 10px;
 }
 
-
 .intextVar {
   color: #990000;
   font-size: 20pt;
@@ -33,4 +32,8 @@
 .intextVar2 {
   color: #990000;
   font-weight: bold;
+}
+
+.ScensTable {
+  background-color: "white";
 }

@@ -2,7 +2,8 @@ import React from 'react';
 import './App.css';
 import '../node_modules/react-vis/dist/style.css';
 import {FlexibleWidthXYPlot , XAxis, YAxis, LineSeries} from 'react-vis';
-import {Container, Paper, Grid, Slider, Tooltip, IconButton, Switch} from '@material-ui/core';
+import {Container, Paper, Grid, Slider, Tooltip, IconButton, Switch, Button} from '@material-ui/core';
+import {TableContainer, Table, TableBody, TableCell, TableHead, TableRow } from '@material-ui/core'
 import InfoTwoToneIcon from '@material-ui/icons/InfoTwoTone';
 
 class App extends React.Component {
@@ -32,8 +33,8 @@ class App extends React.Component {
         scenarios: []
     };
     this.setStateHandler = this.setStateHandler.bind(this);
+    this.saveState = this.saveState.bind(this);
     this.doCalc = this.doCalc.bind(this);
-    this.printTots = this.printTots.bind(this);
   }
 
   componentDidMount() {
@@ -53,9 +54,18 @@ class App extends React.Component {
       this.setState({[e.target.offsetParent.id]: newValue})
     }
     this.doCalc()
-    console.log(this.state);
+    console.log(this.state.scenarios);
   }
-  
+
+  saveState() {
+    this.setState((state) => {
+      const scens = [...state.scenarios, state]
+      return {scenarios: scens}
+    })
+}
+
+
+
   doCalc() {
     let newInvTots = [];
     let newWithdrawTots = [];
@@ -92,10 +102,6 @@ class App extends React.Component {
     this.setState({withdrawTotals: newWithdrawTots})
   }
   
-  printTots() {
-    console.log( this.state.invTotals );
-    }
-
 
    render() { 
     
@@ -104,13 +110,18 @@ class App extends React.Component {
       <Grid container spacing={1} direction="row" alignItems="flex-start" >
         <Grid className="Banner" item xs={12}>
           <Paper className="GridPad">
-            <Grid container justify="space-between" alignItems="flex-end">
+            <Grid container justify="space-between" alignItems="center">
               <Grid item>
                 <h3>Retirement Calculator</h3>
-                <p>Use the sliders to reflect the details of your retirement plan.</p>
+                <p>Use the sliders to reflect the details of your retirement plan.  Estimated investment balances and withdrawals are shown.</p>
+                <p>Save scenarios to compare alternate plans.</p>
               </Grid>
               <Grid item>
                 Fix Y Axis: <Switch  checked={this.state.fixYAxis} onChange={this.setStateHandler} name="fixYAxis" color="primary" />
+                <br /><br />
+                <Button variant="outlined" color="primary" onClick={this.saveState}>
+                Save Scenario
+               </Button>
               </Grid>
             </Grid>
           </Paper>
@@ -131,25 +142,89 @@ class App extends React.Component {
         <Grid item xs={7}>
           <Paper className="removePaperMargin">
             <center><h4>Investment Balance</h4></center>
-            <FlexibleWidthXYPlot  margin={{left: 80}} height={300}  yDomain ={[0,5000000]} >
-              <XAxis />
-              <YAxis />
-              <LineSeries data={this.state.invTotals} />
-            </FlexibleWidthXYPlot >
+            <Plots fixYAxis={this.state.fixYAxis} lineToPlot={this.state.invTotals} yMax={5000000} />
           </Paper>
           <Paper className="removePaperMargin2">
             <center><h4>Annual Withdrawals</h4></center>
-            <FlexibleWidthXYPlot  margin={{left: 80}} height={300} yDomain={[0,200000]}>
-              <XAxis />
-              <YAxis />
-              <LineSeries data={this.state.withdrawTotals} />
-            </FlexibleWidthXYPlot >
+            <Plots fixYAxis={this.state.fixYAxis} lineToPlot={this.state.withdrawTotals} yMax={200000} 
+                   scenarios={this.state.scenarios} />
           </Paper>
+        </Grid>
+        <Grid item xs={12}>
+          <ScenTabel scenarios={this.state.scenarios} />
         </Grid>
       </Grid>
     </Container>
 
     );
+  }
+}
+
+
+
+class ScenTabel extends React.Component {
+  render() {
+    if(this.props.scenarios.length>0){
+     return (
+         <Paper>
+          <TableContainer>
+            <Table >
+              <TableHead>
+                <TableRow>
+                  <TableCell align="center">Line Color</TableCell>
+                  <TableCell align="center">Starting Age</TableCell>
+                  <TableCell align="center">Inv Start Age</TableCell>
+                  <TableCell align="center">Inv End Age</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {this.props.scenarios.map((scen, i) => <TRow key = {i} 
+                        data = {scen} />)}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </Paper>
+     )
+    } else {
+      return (<TableContainer />);
+    }
+  }
+}
+
+class TRow extends React.Component {
+  render() {
+     return (
+          <TableRow >
+            <TableCell align="center"></TableCell>
+            <TableCell align="center">{this.props.data.startingAge}</TableCell>
+            <TableCell align="center">{this.props.data.invStartAge}</TableCell>
+            <TableCell align="center">{this.props.data.invEndAge}</TableCell>
+          </TableRow>
+     );
+  }
+}
+
+class Plots extends React.Component {
+  render() {
+
+    
+
+    if(!this.props.fixYAxis){
+      return(
+       <FlexibleWidthXYPlot  margin={{left: 80}} height={300} > 
+        <XAxis />
+        <YAxis />        
+        <LineSeries data={this.props.lineToPlot} />
+       </FlexibleWidthXYPlot >
+      )
+    } else {
+       return(
+       <FlexibleWidthXYPlot  margin={{left: 80}} height={300} yDomain ={[0,this.props.yMax]} > 
+        <XAxis />
+        <YAxis />
+        <LineSeries data={this.props.lineToPlot} />
+       </FlexibleWidthXYPlot >
+     )}
   }
 }
 
