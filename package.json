@@ -1,7 +1,7 @@
 {
   "name": "app",
   "version": "0.1.0",
-  "homepage": "http://{d-murphy}.github.io/{reactRetirementCalc}",
+  "homepage": "https://d-murphy.github.io/reactRetCalc/",
   "private": true,
   "dependencies": {
     "@material-ui/core": "^4.9.7",
