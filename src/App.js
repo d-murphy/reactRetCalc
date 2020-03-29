@@ -1,7 +1,7 @@
 import React from 'react';
 import './App.css';
 import '../node_modules/react-vis/dist/style.css';
-import {FlexibleWidthXYPlot , XAxis, YAxis, LineSeries} from 'react-vis';
+import {FlexibleXYPlot , XAxis, YAxis, LineSeries} from 'react-vis';
 import {Container, Paper, Grid, Slider, Tooltip, IconButton, Switch, Button} from '@material-ui/core';
 import {TableContainer, Table, TableBody, TableCell, TableHead, TableRow } from '@material-ui/core'
 import InfoTwoToneIcon from '@material-ui/icons/InfoTwoTone';
@@ -16,25 +16,29 @@ class App extends React.Component {
       withdrawTotals[i-18] = {x: i, y: 0}
     }
     this.state = {
-        startingAge: 18, 
-        invStartAge: 25, 
-        invEndAge: 55,
-        oneTimeInvAge: 30, 
-        withdrawAge: 55,
-        startingInv: 5000,
-        annualInv: 0, 
-        oneTimeInv: 0,
-        invGrowth: 7, 
-        withRate: 4,  
-        invTotals: invTotals,
-        value: {min: 2, max: 10},
-        showGraphs: 1,
-        fixYAxis: true,
-        scenarios: []
+        savedScenarios: [],
+        savedInvTotals: [], 
+        savedWithdrawTotals: [],
+        currentInvTotals: invTotals,
+        currentWithdrawTotals: withdrawTotals,
+        currentParams: {
+          startingAge: 18, 
+          invStartAge: 25, 
+          invEndAge: 55,
+          oneTimeInvAge: 30, 
+          withdrawAge: 55,
+          startingInv: 5000,
+          annualInv: 0, 
+          oneTimeInv: 0,
+          invGrowth: 7, 
+          withRate: 4,  
+          fixYAxis: true
+        }
     };
     this.setStateHandler = this.setStateHandler.bind(this);
     this.saveState = this.saveState.bind(this);
     this.doCalc = this.doCalc.bind(this);
+    this.printState = this.printState.bind(this);
   }
 
   componentDidMount() {
@@ -43,24 +47,53 @@ class App extends React.Component {
   
   setStateHandler(e, newValue) {
     if (e.target.offsetParent.id === "invRange"){
-      this.setState({["invStartAge"]: newValue[0]})
-      this.setState({["invEndAge"]: newValue[1]})
+      this.setState({
+        currentParams: {
+          ...this.state.currentParams,
+          ["invStartAge"]: newValue[0],
+          ["invEndAge"]: newValue[1]  
+        }
+      })
     } else if(e.target.offsetParent.id === "startEndAge"){
-      this.setState({["startingAge"]: newValue[0]})
-      this.setState({["withdrawAge"]: newValue[1]})
+      this.setState({
+        currentParams: {
+          ...this.state.currentParams,
+          ["startingAge"]: newValue[0],
+          ["withdrawAge"]: newValue[1]
+        }
+      })        
     } else if(e.target.name==="fixYAxis") {
-      this.setState({[e.target.name]: e.target.checked})
+      this.setState({
+        currentParams: {
+          ...this.state.currentParams,
+          [e.target.name]: e.target.checked
+        }
+      })
     } else {
-      this.setState({[e.target.offsetParent.id]: newValue})
+      this.setState({
+        currentParams: {
+          ...this.state.currentParams,
+          [e.target.offsetParent.id]: newValue
+        }
+      })
     }
     this.doCalc()
-    console.log(this.state.scenarios);
+  }
+
+  printState(){
+    console.log(this.state);
   }
 
   saveState() {
     this.setState((state) => {
-      const scens = [...state.scenarios, state]
-      return {scenarios: scens}
+      const scens = [...state.savedScenarios, state.currentParams]
+      const invTots = [...state.savedInvTotals, state.currentInvTotals]
+      const withTots = [...state.savedWithdrawTotals, state.currentWithdrawTotals]
+      return {
+        savedScenarios: scens,
+        savedInvTotals: invTots,
+        savedWithdrawTotals: withTots, 
+      }
     })
 }
 
@@ -74,32 +107,32 @@ class App extends React.Component {
       let yearWith = 0;
       // Add interest to last years total.  Starts after year 18.
       if(i>18){
-        yearTot += newInvTots[i-19].y * (1 + (parseFloat(this.state.invGrowth)/100))
+        yearTot += newInvTots[i-19].y * (1 + (parseFloat(this.state.currentParams.invGrowth)/100))
       }
       // withdraw funds if appropriate
-      if(i>=parseInt(this.state.withdrawAge)){
-        yearWith = newInvTots[i-19].y * (parseFloat(this.state.withRate)/100)
+      if(i>=parseInt(this.state.currentParams.withdrawAge)){
+        yearWith = newInvTots[i-19].y * (parseFloat(this.state.currentParams.withRate)/100)
         yearTot -= yearWith
       }
       // find the starting age and include that total
-      if(i===parseInt(this.state.startingAge)){
-        yearTot += parseFloat(this.state.startingInv)
+      if(i===parseInt(this.state.currentParams.startingAge)){
+        yearTot += parseFloat(this.state.currentParams.startingInv)
       }
       // add in one time investment at appropripate year
-      if(i===parseInt(this.state.oneTimeInvAge)){
-        yearTot += parseFloat(this.state.oneTimeInv)
+      if(i===parseInt(this.state.currentParams.oneTimeInvAge)){
+        yearTot += parseFloat(this.state.currentParams.oneTimeInv)
       }
       // add in annual investment for appropriate years
-      if(i>=this.state.invStartAge & i<=this.state.invEndAge){
-        yearTot += parseFloat(this.state.annualInv)
+      if(i>=this.state.currentParams.invStartAge & i<=this.state.currentParams.invEndAge){
+        yearTot += parseFloat(this.state.currentParams.annualInv)
       }
 
       newInvTots[i-18] = {x: i, y: yearTot}
       newWithdrawTots[i-18] = {x: i, y: yearWith}
       
     }
-    this.setState({invTotals: newInvTots})
-    this.setState({withdrawTotals: newWithdrawTots})
+    this.setState({currentInvTotals: newInvTots})
+    this.setState({currentWithdrawTotals: newWithdrawTots})
   }
   
 
@@ -117,7 +150,7 @@ class App extends React.Component {
                 <p>Save scenarios to compare alternate plans.</p>
               </Grid>
               <Grid item>
-                Fix Y Axis: <Switch  checked={this.state.fixYAxis} onChange={this.setStateHandler} name="fixYAxis" color="primary" />
+                Fix Y Axis: <Switch  checked={this.state.currentParams.fixYAxis} onChange={this.setStateHandler} name="fixYAxis" color="primary" />
                 <br /><br />
                 <Button variant="outlined" color="primary" onClick={this.saveState}>
                 Save Scenario
@@ -127,31 +160,30 @@ class App extends React.Component {
           </Paper>
         </Grid>
         <Grid item xs={5}>
-          <Inputs startingAge={this.state.startingAge}
-                invStartAge={this.state.invStartAge}
-                invEndAge={this.state.invEndAge}
-                oneTimeInvAge={this.state.oneTimeInvAge}
-                withdrawAge={this.state.withdrawAge}
-                startingInv={this.state.startingInv}
-                annualInv={this.state.annualInv}
-                oneTimeInv={this.state.oneTimeInv}
-                invGrowth={this.state.invGrowth}
-                withRate={this.state.withRate}
+          <Inputs startingAge={this.state.currentParams.startingAge}
+                invStartAge={this.state.currentParams.invStartAge}
+                invEndAge={this.state.currentParams.invEndAge}
+                oneTimeInvAge={this.state.currentParams.oneTimeInvAge}
+                withdrawAge={this.state.currentParams.withdrawAge}
+                startingInv={this.state.currentParams.startingInv}
+                annualInv={this.state.currentParams.annualInv}
+                oneTimeInv={this.state.currentParams.oneTimeInv}
+                invGrowth={this.state.currentParams.invGrowth}
+                withRate={this.state.currentParams.withRate}
                 setStateHandler={this.setStateHandler} />
         </Grid>
         <Grid item xs={7}>
           <Paper className="removePaperMargin">
             <center><h4>Investment Balance</h4></center>
-            <Plots fixYAxis={this.state.fixYAxis} lineToPlot={this.state.invTotals} yMax={5000000} />
+            <Plots fixYAxis={this.state.currentParams.fixYAxis} lineToPlot={this.state.currentInvTotals} scenarios={this.state.savedInvTotals} yMax={5000000} />
           </Paper>
           <Paper className="removePaperMargin2">
             <center><h4>Annual Withdrawals</h4></center>
-            <Plots fixYAxis={this.state.fixYAxis} lineToPlot={this.state.withdrawTotals} yMax={200000} 
-                   scenarios={this.state.scenarios} />
+            <Plots fixYAxis={this.state.currentParams.fixYAxis} lineToPlot={this.state.currentWithdrawTotals} scenarios={this.state.savedWithdrawTotals} yMax={200000}  />
           </Paper>
         </Grid>
-        <Grid item xs={12}>
-          <ScenTabel scenarios={this.state.scenarios} />
+        <Grid item xs={12} >
+          <ScenTable scenarios={this.state.savedScenarios} />
         </Grid>
       </Grid>
     </Container>
@@ -162,24 +194,31 @@ class App extends React.Component {
 
 
 
-class ScenTabel extends React.Component {
+class ScenTable extends React.Component {
   render() {
     if(this.props.scenarios.length>0){
      return (
          <Paper>
+          <h4 style={{padding: "20px"}}>Parameters of Saved Scenarios</h4>
           <TableContainer>
             <Table >
               <TableHead>
                 <TableRow>
-                  <TableCell align="center">Line Color</TableCell>
+                  <TableCell align="center"></TableCell>
                   <TableCell align="center">Starting Age</TableCell>
-                  <TableCell align="center">Inv Start Age</TableCell>
-                  <TableCell align="center">Inv End Age</TableCell>
+                  <TableCell align="center">Starting Investment</TableCell>
+                  <TableCell align="center">Investing Start Age</TableCell>
+                  <TableCell align="center">Investing End Age</TableCell>
+                  <TableCell align="center">Annual Investment</TableCell>
+                  <TableCell align="center">One Time Inv. Age</TableCell>
+                  <TableCell align="center">One Time Investment</TableCell>
+                  <TableCell align="center">Inv Growth %</TableCell>
+                  <TableCell align="center">Withdrawal Age</TableCell>
+                  <TableCell align="center">Withdrawal %</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
-                {this.props.scenarios.map((scen, i) => <TRow key = {i} 
-                        data = {scen} />)}
+                {this.props.scenarios.map((scen, index) => <TRow key={index} data = {scen} colorKey={index} scenName={"Scenario # " + (index+1)} />)}
               </TableBody>
             </Table>
           </TableContainer>
@@ -191,14 +230,23 @@ class ScenTabel extends React.Component {
   }
 }
 
+let colors = ["#56B4E9", "#009E73", "#F0E442", "#E69F00", "#D55E00"];
+
 class TRow extends React.Component {
   render() {
      return (
-          <TableRow >
-            <TableCell align="center"></TableCell>
+          <TableRow  >
+            <TableCell align="center" style={{color: colors[this.props.colorKey] }}>{this.props.scenName}</TableCell>
             <TableCell align="center">{this.props.data.startingAge}</TableCell>
+            <TableCell align="center">{this.props.data.startingInv}</TableCell>
             <TableCell align="center">{this.props.data.invStartAge}</TableCell>
             <TableCell align="center">{this.props.data.invEndAge}</TableCell>
+            <TableCell align="center">{this.props.data.annualInv}</TableCell>
+            <TableCell align="center">{this.props.data.oneTimeInvAge}</TableCell>
+            <TableCell align="center">{this.props.data.oneTimeInv}</TableCell>
+            <TableCell align="center">{this.props.data.invGrowth}</TableCell>
+            <TableCell align="center">{this.props.data.withdrawAge}</TableCell>
+            <TableCell align="center">{this.props.data.withRate}</TableCell>
           </TableRow>
      );
   }
@@ -207,23 +255,30 @@ class TRow extends React.Component {
 class Plots extends React.Component {
   render() {
 
-    
-
     if(!this.props.fixYAxis){
-      return(
-       <FlexibleWidthXYPlot  margin={{left: 80}} height={300} > 
-        <XAxis />
-        <YAxis />        
-        <LineSeries data={this.props.lineToPlot} />
-       </FlexibleWidthXYPlot >
-      )
-    } else {
-       return(
-       <FlexibleWidthXYPlot  margin={{left: 80}} height={300} yDomain ={[0,this.props.yMax]} > 
-        <XAxis />
-        <YAxis />
-        <LineSeries data={this.props.lineToPlot} />
-       </FlexibleWidthXYPlot >
+        return(
+          <FlexibleXYPlot  margin={{left: 80}} height={305} > 
+           <XAxis />
+           <YAxis />
+           <LineSeries data={this.props.lineToPlot} color="black" />
+           <LineSeries data={this.props.scenarios[0]} color="56B4E9" />
+           <LineSeries data={this.props.scenarios[1]} color="009E73" />
+           <LineSeries data={this.props.scenarios[2]} color="F0E442"/>
+           <LineSeries data={this.props.scenarios[3]} color="E69F00"/>
+           <LineSeries data={this.props.scenarios[4]} color="D55E00"/>
+          </FlexibleXYPlot >   
+      )} else {
+        return(
+        <FlexibleXYPlot  margin={{left: 80}} height={305} yDomain ={[0,this.props.yMax]} > 
+          <XAxis />
+          <YAxis />
+          <LineSeries data={this.props.lineToPlot} color="black" />
+          <LineSeries data={this.props.scenarios[0]} color="56B4E9" />
+          <LineSeries data={this.props.scenarios[1]} color="009E73" />
+          <LineSeries data={this.props.scenarios[2]} color="F0E442"/>
+          <LineSeries data={this.props.scenarios[3]} color="E69F00"/>
+          <LineSeries data={this.props.scenarios[4]} color="D55E00"/>
+        </FlexibleXYPlot >
      )}
   }
 }
@@ -252,7 +307,8 @@ class Inputs extends React.Component {
                   I have&nbsp;<span className="intextVar">${this.props.startingInv}</span>
                   &nbsp;saved for retirement. 
                 <Grid className="GridPad" item xs={10} >
-                  <Slider id="startingInv" min={0} max={500000} step={1000} defaultValue={5} valueLabelDisplay="auto" onChangeCommitted={this.props.setStateHandler} />
+                  <Slider id="startingInv" min={0} max={500000} step={1000} defaultValue={5} valueLabelDisplay="auto" 
+                          onChangeCommitted={this.props.setStateHandler} />
                 </Grid>
               </Grid>
             </Grid>
